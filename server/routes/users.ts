@@ -18,5 +18,26 @@ export async function userRoutes(app: FastifyInstance) {
 
         await streamChat.upsertUser({id, name, image})
     })
+
+    app.post<{ Body: { id: string }}>("/login", async (req, res) => {
+        const { id} = req.body
+        if (id == null || id === " ") {
+            return res.status(400).send({ message: "Bad Request" })
+        }
+
+        const {
+            users:[user],
+        } = await streamChat.queryUsers({id})
+        if (user == null) {
+            return res.status(400).send({ message: "User does not exist" })
+        }
+
+        const token = streamChat.createToken(id)
+
+        return {
+            token,
+            user:{name:user.name, id: user.id, image: user.image}
+        }
+    })
 }
 
